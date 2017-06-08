@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+
+# your target element here
+ELEMENT_START = '<record>'
+ELEMENT_STOP = '</record'
+
+# your emit code here - in this case I'm just writing it to a separate file named import_entities-NUM.txt
+def save(import_entity)
+  $import_entity_count ||= 0
+  $import_entity_count += 1
+  File.open("import_entities-#{$import_entity_count}.xml", 'w') { |f|
+    f.write "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<jobs>\n#{import_entity}\n</jobs>"
+  }
+end
+
+def emit(import_entity)
+  $stored ||= 0
+  $stored += 1
+  $store ||= ""
+  $store = "#{$store}#{import_entity}"
+  if $stored > 100
+    save($store)
+    $stored = 0
+    $store=""
+  end
+end
+
+SGREP_BIN = %w{ sgrep sgrep2 }.detect { |bin| `which #{bin}`; $?.success? }
+MAGIC_START = 'XXXSTART'
+MAGIC_STOP = 'STOPXXX'
+
+leftover = ''
+IO.popen([ SGREP_BIN, '-n', '-o', "#{MAGIC_START}%r#{MAGIC_STOP}", %{"#{ELEMENT_START}" .. "#{ELEMENT_STOP}"}, ARGV[0] ]) do |io|
+  while additional = io.read(65536)
+    buffer = leftover + additional
+    while (start = buffer.index(MAGIC_START)) and (stop = buffer.index(MAGIC_STOP))
+      element_body = buffer[(start+MAGIC_START.length)...stop] + '>'
+      # what "emit" does is up to you
+      emit element_body
+      buffer = buffer[(stop+MAGIC_STOP.length)..-1]
+    end
+    leftover = buffer
+  end
+  save($store) #save the last batch if there is one
+end
