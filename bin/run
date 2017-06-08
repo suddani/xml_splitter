@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+PORT=${PORT:=3000}
+
+bundle exec thin start -p $PORT
