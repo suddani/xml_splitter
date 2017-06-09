@@ -9,9 +9,21 @@ class App < Sinatra::Base
     source_url = params["url"]
     element = params["element"]||"entity"
     element_count = params["element_count"].to_i||1000
+    username = params["username"]
+    password = params["password"]
+
+    fetcher = if source_url.match(/^http/)
+      puts "Its html"
+      XmlSplitter::HttpFetcher.new
+    elsif source_url.match(/^ftp/)
+      puts "Its ftp"
+      XmlSplitter::FtpFetcher.new(username, password)
+    else
+      raise "Unknown type"
+    end
 
     File.open("feed.xml", "w+") do |file|
-      file.write XmlSplitter::HttpFetcher.new.fetch_direct(source_url)
+      file.write fetcher.fetch_direct(source_url)
     end
 
     content_type :zip
