@@ -1,4 +1,4 @@
-REPO ?= xml_splitter
+REPO ?= suddani/xml_splitter
 TAG  ?= $(shell git rev-parse --short HEAD)
 USED_TAG := $(TAG)
 define images
