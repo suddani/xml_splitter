@@ -72,7 +72,7 @@ class XmlSplitter::Splitter
   end
 
   def element_stop
-    "</#{element}"
+    "</#{element}>"
   end
 
   def run(input:)
